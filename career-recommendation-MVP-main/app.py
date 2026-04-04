@@ -212,6 +212,7 @@ if st.sidebar.button("🚀 Get AI Recommendations", key="recommend"):
         st.warning("🤖 No recommendations meet the confidence threshold. Try adjusting the settings or selecting more skills.")
     else:
         for i, career in enumerate(filtered_careers, 1):
+            dev_plan_html = "".join(f"<li>{step}</li>" for step in career["developmentPlan"].split('\n') if step.strip())
             with st.container():
                 st.markdown(f"""
                 <div class="card">
@@ -220,12 +221,7 @@ if st.sidebar.button("🚀 Get AI Recommendations", key="recommend"):
                     <p><strong>🧠 Why this career?</strong> This career is recommended because it {', '.join(career['reasons'])}, making it a strong match for your background.</p>
                     <p><strong>📈 Development Plan:</strong></p>
                     <ul>
-                """, unsafe_allow_html=True)
-                
-                for step in career["developmentPlan"].split('\n'):
-                    st.markdown(f"<li>{step}</li>", unsafe_allow_html=True)
-                
-                st.markdown(f"""
+                        {dev_plan_html}
                     </ul>
                     <div class="score-badge">Match Score: {career['score']}/10</div>
                 </div>
