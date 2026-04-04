@@ -1,5 +1,5 @@
 🎯 Career Recommendation System – MVP
-A full-stack web application that recommends 3–5 suitable career paths based on user inputs such as education level, interests, skills, and preferred industry.
+A Python web application built with Streamlit that recommends 3–5 suitable career paths based on user inputs such as education level, interests, skills, and preferred industry.
 Built as a rule-based, explainable MVP for hackathon use.
 📌 Problem Statement
 Many students and early-career professionals struggle to choose the right career path due to lack of personalized guidance.
@@ -9,43 +9,31 @@ Collects basic user inputs
 Recommends 3–5 suitable career options
 Provides a brief rationale for each recommendation
 🚀 Solution Overview
-This project implements a simple, explainable career recommendation engine using a full-stack architecture.
+This project implements a simple, explainable career recommendation engine using Python and Streamlit.
 Key Highlights
 Rule-based recommendation logic
 Explainable scoring system (no black-box AI)
-Clean, full-screen UI
+Clean, interactive UI
 Fast and reliable MVP design
 🧩 System Architecture
 Copy code
 
 User
  ↓
-Frontend (HTML, CSS, JavaScript)
- ↓
-Backend API (Node.js + Express)
+Streamlit App (Python)
  ↓
 Rule-Based Recommendation Logic
  ↓
 Career Recommendations (3–5 results)
-🖥️ Frontend
-Built using HTML, CSS, and JavaScript
+🖥️ Application
+Built using Python and Streamlit
 Collects:
 Education level
 Interests
 Skills
 Preferred industry
-Sends user input to backend via REST API
+Applies recommendation logic
 Displays ranked career recommendations with reasons
-⚙️ Backend
-Built using Node.js and Express
-Exposes a /recommend API endpoint
-Uses a predefined career dataset
-Applies a weighted scoring algorithm:
-Interest match → highest weight
-Industry match → medium weight
-Skill match → additive weight
-Education match → refinement
-Ranks careers and returns top results
 🧠 Recommendation Logic (Explainable)
 Each career option is evaluated against user inputs:
 Matching interest increases score
@@ -60,8 +48,12 @@ Brief description
 Match score
 Clear rationale explaining why the career was suggested
 🛠️ Tech Stack
-Frontend: HTML, CSS, JavaScript
-Backend: Node.js, Express
-Architecture: REST API, rule-based logic
+Application: Python, Streamlit
+Architecture: Rule-based logic
 ✅ Conclusion
-This project delivers a working, explainable, and scalable MVP that meets the problem statement requirements and demonstrates strong full-stack fundamentals.
+This project delivers a working, explainable, and scalable MVP that meets the problem statement requirements and demonstrates strong Python development fundamentals.
+
+## How to Run
+1. Ensure Python is installed.
+2. Install dependencies: `pip install streamlit`
+3. Run the app: `streamlit run app.py`
