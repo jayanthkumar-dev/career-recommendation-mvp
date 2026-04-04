@@ -53,7 +53,15 @@ Architecture: Rule-based logic
 ✅ Conclusion
 This project delivers a working, explainable, and scalable MVP that meets the problem statement requirements and demonstrates strong Python development fundamentals.
 
-## How to Run
+## How to Run Locally
 1. Ensure Python is installed.
-2. Install dependencies: `pip install streamlit`
+2. Install dependencies: `pip install -r requirements.txt`
 3. Run the app: `streamlit run app.py`
+
+## Deploy to Streamlit Cloud
+1. Push this code to a GitHub repository.
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your GitHub account and select this repository.
+4. Set the main file path to `app.py` and click Deploy.
+
+The deployed app will be available at a URL like: `https://your-app-name.streamlit.app`
