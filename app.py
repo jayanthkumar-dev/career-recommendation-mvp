@@ -1,8 +1,5 @@
-import json
-import os
 from typing import Dict, List
 
-from openai import OpenAI
 import streamlit as st
 
 st.set_page_config(
@@ -11,54 +8,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
-DEFAULT_RECOMMENDATIONS = [
-    {
-        "title": "Product Manager",
-        "description": "Lead product strategy, prioritize roadmaps, and bring cross-functional ideas to market.",
-        "emoji": "🚀",
-        "skills": ["Leadership", "Roadmapping", "Communication"],
-        "match_score": 92,
-        "why": "Your leadership and communication skills align perfectly with product management. Your interest in technology gives you a strong foundation.",
-        "development_plan": "1. Learn Agile methodologies and product lifecycle.\n2. Develop stakeholder communication skills.\n3. Gain experience in software development or business analysis."
-    },
-    {
-        "title": "Data Analyst",
-        "description": "Translate data into business insight through analytics, dashboards, and storytelling.",
-        "emoji": "📊",
-        "skills": ["SQL", "Data Visualization", "Problem Solving"],
-        "match_score": 85,
-        "why": "Your analytical mindset and technical interest make this an excellent fit. This role leverages your problem-solving skills.",
-        "development_plan": "1. Master Excel, SQL, and Python for data manipulation.\n2. Learn data visualization tools like Tableau or PowerBI.\n3. Build projects to demonstrate ROI and insights."
-    },
-    {
-        "title": "UX Designer",
-        "description": "Design engaging product experiences by combining user research, interface design, and testing.",
-        "emoji": "🎨",
-        "skills": ["User Research", "Wireframing", "Empathy"],
-        "match_score": 78,
-        "why": "Your creative interest and communication skills are valuable for UX. You'll help shape how users experience products.",
-        "development_plan": "1. Learn design principles, wireframing, and prototyping.\n2. Study user research methodologies.\n3. Build a portfolio with real projects and user feedback."
-    },
-    {
-        "title": "Technical Consultant",
-        "description": "Advise teams on technology solutions, implementation plans, and business process improvements.",
-        "emoji": "💡",
-        "skills": ["Consulting", "Strategy", "Communication"],
-        "match_score": 88,
-        "why": "Your technical knowledge combined with strategic thinking positions you well for consulting. You can bridge tech and business.",
-        "development_plan": "1. Gain deep technical expertise in your domain.\n2. Develop business acumen and financial understanding.\n3. Build a track record of successful implementations."
-    },
-    {
-        "title": "Growth Marketing Specialist",
-        "description": "Build user acquisition and retention strategies across digital channels with a data-first approach.",
-        "emoji": "📈",
-        "skills": ["Analytics", "Copywriting", "Campaign Management"],
-        "match_score": 81,
-        "why": "Your analytical skills and interest in business make growth marketing compelling. Track metrics and optimize user acquisition.",
-        "development_plan": "1. Learn analytics tools and marketing funnels.\n2. Master A/B testing and data-driven decision making.\n3. Run real campaigns and measure success."
-    }
-]
 
 
 GLOBAL_STYLES = """
@@ -443,10 +392,6 @@ GLOBAL_STYLES = """
 </style>
 """
 
-FALLBACK_MESSAGE = (
-    "We couldn't connect to the OpenAI API right now, so we're showing curated career recommendations "
-    "based on your profile. Try again in a moment for an AI-powered update."
-)
 
 if "page" not in st.session_state:
     st.session_state.page = "profile"
@@ -456,9 +401,6 @@ if "recommendations" not in st.session_state:
 
 if "profile_saved" not in st.session_state:
     st.session_state.profile_saved = False
-
-if "openai_error" not in st.session_state:
-    st.session_state.openai_error = ""
 
 if "education" not in st.session_state:
     st.session_state.education = ""
@@ -481,37 +423,6 @@ if "linkedin" not in st.session_state:
 
 def set_page(page_name: str) -> None:
     st.session_state.page = page_name
-
-
-def get_openai_api_key() -> str:
-    return os.getenv("OPENAI_API_KEY", "")
-
-
-def safe_parse_recommendations(text: str) -> List[Dict]:
-    try:
-        start = text.index("[")
-        end = text.rindex("]") + 1
-        payload = text[start:end]
-        data = json.loads(payload)
-        if isinstance(data, list):
-            cleaned = []
-            for item in data:
-                if isinstance(item, dict) and all(k in item for k in ["title", "description", "emoji", "skills"]):
-                    cleaned.append(
-                        {
-                            "title": item["title"].strip(),
-                            "description": item["description"].strip(),
-                            "emoji": item["emoji"].strip(),
-                            "skills": [str(skill).strip().title() for skill in item["skills"] if str(skill).strip()],
-                            "match_score": item.get("match_score", 85),
-                            "why": item.get("why", "This role matches your profile well."),
-                            "development_plan": item.get("development_plan", "Focus on skill development."),
-                        }
-                    )
-            return cleaned
-    except (ValueError, json.JSONDecodeError):
-        return []
-    return []
 
 
 def generate_recommendations_from_ai(profile: Dict) -> List[Dict]:
