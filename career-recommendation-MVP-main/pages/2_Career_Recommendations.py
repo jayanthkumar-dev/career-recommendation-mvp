@@ -23,11 +23,20 @@ if "profile" not in st.session_state:
 if "recommendations" not in st.session_state:
     st.session_state.recommendations = []
 
+if "last_regenerated_at" not in st.session_state:
+    st.session_state.last_regenerated_at = ""
+
 
 def main() -> None:
+    import random
+    import time
+
     apply_theme(hide_sidebar=True)
     render_top_nav(is_results_page=True)
     st.markdown("### Career Recommendations")
+
+    if st.session_state.last_regenerated_at:
+        st.caption(f"Last regenerated: {st.session_state.last_regenerated_at}")
 
     profile = st.session_state.profile
     required_fields = [profile.get("education", ""), profile.get("interest", ""), profile.get("industry", ""), profile.get("skills_text", "")]
@@ -39,8 +48,6 @@ def main() -> None:
 
     if not st.session_state.recommendations:
         with st.spinner("Generating recommendations..."):
-            import time
-
             time.sleep(1.0)
             st.session_state.recommendations = build_recommendations(profile)
 
@@ -51,8 +58,18 @@ def main() -> None:
         if st.button("Back to Profile", use_container_width=True):
             st.switch_page("app.py")
     with col2:
-        if st.button("Regenerate", use_container_width=True):
-            st.session_state.recommendations = build_recommendations(profile)
+        if st.button("Regenerate", use_container_width=True, key="regenerate_recommendations_btn"):
+            with st.spinner("Refreshing recommendations..."):
+                refreshed = build_recommendations(profile)
+
+                # Keep the strongest match first, but diversify the remaining suggestions.
+                if len(refreshed) > 2:
+                    tail = refreshed[1:]
+                    random.shuffle(tail)
+                    refreshed = [refreshed[0]] + tail
+
+                st.session_state.recommendations = refreshed
+                st.session_state.last_regenerated_at = time.strftime("%H:%M:%S")
             st.rerun()
 
     st.write("---")
