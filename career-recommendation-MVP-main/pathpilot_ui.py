@@ -14,9 +14,19 @@ def apply_theme(hide_sidebar: bool = True) -> None:
     st.markdown(
         f"""
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+
+            :root {{
+                --pp-text: #e2e8f0;
+                --pp-muted: #94a3b8;
+                --pp-glass: rgba(15, 23, 42, 0.5);
+                --pp-border: rgba(148, 163, 184, 0.25);
+            }}
+
             {sidebar_rules}
 
             .stApp {{
+                font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
                 background:
                     radial-gradient(1100px 500px at 10% 0%, rgba(56, 189, 248, 0.22), transparent 55%),
                     radial-gradient(900px 500px at 90% 0%, rgba(124, 58, 237, 0.22), transparent 55%),
@@ -30,15 +40,22 @@ def apply_theme(hide_sidebar: bool = True) -> None:
             }}
 
             h1, h2, h3, p, label, div, span {{
-                color: #e2e8f0;
+                color: var(--pp-text);
             }}
 
             [data-testid="stVerticalBlockBorderWrapper"] {{
                 border-radius: 16px;
-                border: 1px solid rgba(148, 163, 184, 0.25) !important;
-                background: rgba(15, 23, 42, 0.50);
+                border: 1px solid var(--pp-border) !important;
+                background: var(--pp-glass);
                 box-shadow: 0 16px 32px rgba(2, 6, 23, 0.35);
                 backdrop-filter: blur(8px);
+                transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            }}
+
+            [data-testid="stVerticalBlockBorderWrapper"]:hover {{
+                transform: translateY(-2px);
+                border-color: rgba(56, 189, 248, 0.45) !important;
+                box-shadow: 0 20px 36px rgba(15, 23, 42, 0.42);
             }}
 
             .stButton > button {{
@@ -46,6 +63,7 @@ def apply_theme(hide_sidebar: bool = True) -> None:
                 border-radius: 999px !important;
                 color: #ffffff !important;
                 font-weight: 700 !important;
+                letter-spacing: 0.02em;
                 background: linear-gradient(135deg, #38bdf8 0%, #7c3aed 100%) !important;
                 box-shadow: 0 10px 24px rgba(59, 130, 246, 0.35) !important;
                 transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -60,8 +78,32 @@ def apply_theme(hide_sidebar: bool = True) -> None:
             [data-testid="stTextAreaRootElement"] textarea {{
                 border-radius: 12px !important;
                 background: rgba(15, 23, 42, 0.7) !important;
-                color: #e2e8f0 !important;
+                color: var(--pp-text) !important;
                 border: 1px solid rgba(148, 163, 184, 0.35) !important;
+            }}
+
+            [data-testid="stMetric"] {{
+                background: rgba(15, 23, 42, 0.45);
+                border: 1px solid rgba(148, 163, 184, 0.18);
+                border-radius: 12px;
+                padding: 8px 10px;
+            }}
+
+            .pp-skill-pills {{
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 4px;
+            }}
+
+            .pp-skill-pill {{
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: #dbeafe;
+                border: 1px solid rgba(125, 211, 252, 0.35);
+                border-radius: 999px;
+                padding: 4px 10px;
+                background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(124, 58, 237, 0.16));
             }}
         </style>
         """,
@@ -228,7 +270,10 @@ def render_card_grid(recommendations: Iterable[Dict[str, object]]) -> None:
                 for step in rec.get("development_plan", []):
                     st.write(f"- {step}")
                 st.markdown("**Key skills:**")
-                st.markdown(" ".join(f"`{skill}`" for skill in rec.get("skills", [])))
+                pills = "".join(
+                    f"<span class='pp-skill-pill'>{skill}</span>" for skill in rec.get("skills", [])
+                )
+                st.markdown(f"<div class='pp-skill-pills'>{pills}</div>", unsafe_allow_html=True)
 
 
 def render_footer() -> None:
