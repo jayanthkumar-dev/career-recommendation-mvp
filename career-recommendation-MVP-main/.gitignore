@@ -8,4 +8,18 @@ node_modules/
 *.db
 
 # Logs
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.pytest_cache/
 npm-debug.log*

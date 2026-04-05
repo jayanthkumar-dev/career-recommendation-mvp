@@ -48,6 +48,9 @@ Brief description
 Match score
 Clear rationale explaining why the career was suggested
 🛠️ Tech Stack
+- **Python** - Core programming language
+- **Streamlit** - Web framework for building the interactive application
+- **OpenAI API** - For AI-powered career recommendations (fallback to rule-based system if unavailable)
 Application: Python, Streamlit
 Architecture: Rule-based logic
 ✅ Conclusion
