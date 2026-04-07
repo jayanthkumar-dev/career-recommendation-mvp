@@ -578,10 +578,10 @@ MENTOR_CAREERS: List[Dict[str, Any]] = [
 
 
 MENTOR_MODES: Dict[str, Dict[str, str]] = {
-    "Founder Coach": {
-        "question_prefix": "From a high-ownership builder lens:",
-        "advice_style": "Bias toward action, momentum, and intelligent risk.",
-        "roadmap_focus": "Focus: execution speed, validation, and growth signals.",
+    "Friendly Coach": {
+        "question_prefix": "From a practical mentor lens:",
+        "advice_style": "Bias toward clarity, steady momentum, and confident action.",
+        "roadmap_focus": "Focus: practical execution, confidence building, and visible progress.",
     },
     "Corporate Strategist": {
         "question_prefix": "From a strategic long-term career lens:",
@@ -799,6 +799,57 @@ def build_dynamic_questions(profile: Dict[str, str]) -> List[Dict[str, Any]]:
     mode = profile.get("mentor_mode", "Corporate Strategist")
     mode_style = MENTOR_MODES.get(mode, MENTOR_MODES["Corporate Strategist"])
 
+    mode_prompt_variants: Dict[str, Dict[str, str]] = {
+        "Friendly Coach": {
+            "thinking": "When things get messy, how do you usually find your next best step?",
+            "motivation": "What would make your next career move feel genuinely right for you?",
+            "work": "What work style helps you stay confident and consistent each week?",
+            "effort": "How much stretch can you handle while still staying sustainable?",
+        },
+        "Corporate Strategist": {
+            "thinking": "In high-stakes situations, what is your default decision architecture?",
+            "motivation": "Which outcome should be prioritized for long-term career compounding?",
+            "work": "Which operating model maximizes role progression and execution quality?",
+            "effort": "What execution intensity is realistic for a 12-month strategic plan?",
+        },
+        "Creative Career Architect": {
+            "thinking": "When facing ambiguity, how do you shape a distinctive solution path?",
+            "motivation": "What outcome would make your work feel both expressive and high-impact?",
+            "work": "Which environment gives you the most creative leverage and output quality?",
+            "effort": "How intensely can you push while preserving creative quality?",
+        },
+    }
+
+    mode_option_variants: Dict[str, Dict[str, List[Dict[str, str]]]] = {
+        "Friendly Coach": {
+            "motivation": [
+                {"label": "Build stronger income and stability for my next phase", "value": "money"},
+                {"label": "Do work that feels meaningful day to day", "value": "passion"},
+                {"label": "Create a reliable path with less uncertainty", "value": "stability"},
+                {"label": "Gain freedom over time and energy", "value": "freedom"},
+            ]
+        },
+        "Corporate Strategist": {
+            "motivation": [
+                {"label": "Maximize compensation and growth velocity", "value": "money"},
+                {"label": "Optimize for role-purpose alignment", "value": "passion"},
+                {"label": "Prioritize predictable long-term progression", "value": "stability"},
+                {"label": "Design for autonomy with strategic optionality", "value": "freedom"},
+            ]
+        },
+        "Creative Career Architect": {
+            "motivation": [
+                {"label": "Earn more while building bold, visible work", "value": "money"},
+                {"label": "Build work that reflects my creative identity", "value": "passion"},
+                {"label": "Create a sustainable rhythm without losing originality", "value": "stability"},
+                {"label": "Design an independent, flexible career arc", "value": "freedom"},
+            ]
+        },
+    }
+
+    prompt_set = mode_prompt_variants.get(mode, mode_prompt_variants["Corporate Strategist"])
+    motivation_options = mode_option_variants.get(mode, mode_option_variants["Corporate Strategist"]).get("motivation", [])
+
     domain_scenario = {
         "Technology": "Your product crashes during launch week. What do you do first?",
         "Design": "Your design gets rejected for low business impact. What is your first response?",
@@ -817,7 +868,7 @@ def build_dynamic_questions(profile: Dict[str, str]) -> List[Dict[str, Any]]:
     questions = [
         {
             "id": "thinking_style",
-            "prompt": "In complex situations, how does your mind naturally organize decisions?",
+            "prompt": prompt_set["thinking"],
             "options": [
                 {"label": "I map logic, constraints, and execution paths", "value": "logic"},
                 {"label": "I explore bold possibilities before narrowing", "value": "creative"},
@@ -827,13 +878,8 @@ def build_dynamic_questions(profile: Dict[str, str]) -> List[Dict[str, Any]]:
         },
         {
             "id": "motivation",
-            "prompt": "What outcome matters most for your next career chapter?",
-            "options": [
-                {"label": "Maximize compensation and growth speed", "value": "money"},
-                {"label": "Build meaningful work I care about", "value": "passion"},
-                {"label": "Secure predictable long-term progression", "value": "stability"},
-                {"label": "Create autonomy and lifestyle flexibility", "value": "freedom"},
-            ],
+            "prompt": prompt_set["motivation"],
+            "options": motivation_options,
         },
         {
             "id": "domain_scenario",
@@ -857,7 +903,7 @@ def build_dynamic_questions(profile: Dict[str, str]) -> List[Dict[str, Any]]:
         },
         {
             "id": "work_preference",
-            "prompt": f"At your current {experience} stage, which work style unlocks your best output?",
+            "prompt": f"{prompt_set['work']} (Current level: {experience})",
             "options": [
                 {"label": "Deep solo execution with clear ownership", "value": "solo"},
                 {"label": "Cross-functional collaboration with fast loops", "value": "team"},
@@ -867,7 +913,7 @@ def build_dynamic_questions(profile: Dict[str, str]) -> List[Dict[str, Any]]:
         },
         {
             "id": "effort_tolerance",
-            "prompt": "How hard are you willing to push in the next 12 months for career acceleration?",
+            "prompt": prompt_set["effort"],
             "options": [
                 {"label": "Intense build mode with high discipline", "value": "high"},
                 {"label": "Strong consistency without burnout", "value": "medium"},
@@ -890,7 +936,7 @@ def build_hybrid_coach_report(profile: Dict[str, str], answers: Dict[str, str]) 
     mode_style = MENTOR_MODES.get(mode, MENTOR_MODES["Corporate Strategist"])
 
     mode_roadmap_step: Dict[str, str] = {
-        "Founder Coach": "Publish one measurable growth experiment and review weekly outcomes.",
+        "Friendly Coach": "Complete one practical outcome each week and review what improved.",
         "Corporate Strategist": "Document monthly capability milestones and mentor feedback loops.",
         "Creative Career Architect": "Ship one signature portfolio artifact that demonstrates differentiated thinking.",
     }
@@ -933,11 +979,17 @@ def build_hybrid_coach_report(profile: Dict[str, str], answers: Dict[str, str]) 
 
     scored.sort(key=lambda item: int(item["match_score"]), reverse=True)
     top_three = scored[:3]
-    careers = [
-        {"label": "Primary Career", **top_three[0]},
-        {"label": "Secondary Career", **top_three[1]},
-        {"label": "Exploratory Option", **top_three[2]},
-    ]
+    top_five = scored[:5]
+
+    careers: List[Dict[str, Any]] = []
+    label_map = {
+        0: "Primary Career",
+        1: "Secondary Career",
+        2: "Exploratory Option",
+    }
+    for idx, career in enumerate(top_five):
+        label = label_map.get(idx, f"Alternative Path {idx - 2}")
+        careers.append({"label": label, **career})
 
     top_score = int(top_three[0]["match_score"])
     avg_score = int(sum(int(c["match_score"]) for c in top_three) / len(top_three))
@@ -986,7 +1038,7 @@ def build_hybrid_coach_report(profile: Dict[str, str], answers: Dict[str, str]) 
     )
 
     mode_advice: Dict[str, str] = {
-        "Founder Coach": "Keep decisions fast but evidence-backed. Momentum with signal beats perfection.",
+        "Friendly Coach": "Keep it simple and consistent. Small wins each week create long-term acceleration.",
         "Corporate Strategist": "Build repeatable excellence. Reliability and depth create long-term leverage.",
         "Creative Career Architect": "Protect creative range while shipping tangible outcomes. Distinct work earns premium opportunities.",
     }

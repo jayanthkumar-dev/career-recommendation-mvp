@@ -147,6 +147,35 @@ def apply_theme(hide_sidebar: bool = True) -> None:
                 line-height: 1.45;
             }}
 
+            .pp-badge {{
+                display: inline-block;
+                border-radius: 999px;
+                padding: 4px 10px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                border: 1px solid rgba(79, 140, 255, 0.55);
+                background: rgba(79, 140, 255, 0.18);
+                color: #d9e7ff;
+                margin-right: 8px;
+                margin-bottom: 8px;
+            }}
+
+            .pp-warning {{
+                border-left: 3px solid #ff7f7f;
+                background: rgba(255, 127, 127, 0.12);
+                border-radius: 10px;
+                padding: 9px 12px;
+                margin: 8px 0;
+            }}
+
+            .pp-advice {{
+                border-left: 3px solid #8bffcb;
+                background: rgba(139, 255, 203, 0.12);
+                border-radius: 10px;
+                padding: 9px 12px;
+                margin: 8px 0;
+            }}
+
             .pp-result-card {{
                 padding: 0.2rem 0.2rem 0.5rem 0.2rem;
             }}
@@ -504,10 +533,10 @@ def render_smart_profile_input(profile: Dict[str, object]) -> Tuple[Dict[str, ob
 
         mentor_mode = st.selectbox(
             "Mentor Mode",
-            options=["Founder Coach", "Corporate Strategist", "Creative Career Architect"],
-            index=["Founder Coach", "Corporate Strategist", "Creative Career Architect"].index(
+            options=["Friendly Coach", "Corporate Strategist", "Creative Career Architect"],
+            index=["Friendly Coach", "Corporate Strategist", "Creative Career Architect"].index(
                 str(profile.get("mentor_mode", "Corporate Strategist"))
-            ) if str(profile.get("mentor_mode", "Corporate Strategist")) in ["Founder Coach", "Corporate Strategist", "Creative Career Architect"] else 1,
+            ) if str(profile.get("mentor_mode", "Corporate Strategist")) in ["Friendly Coach", "Corporate Strategist", "Creative Career Architect"] else 1,
         )
 
         st.markdown("### Skills & Capability")
@@ -595,11 +624,11 @@ def render_ai_conversation(history: Iterable[Dict[str, str]], question: Dict[str
 
     with st.container(border=True):
         for item in history:
-            st.markdown(f"**Mentor**  \\n+{item.get('question', '')}")
-            st.markdown(f"**You**  \\n+{item.get('answer', '')}")
+            st.markdown(f"**Mentor:** {item.get('question', '')}")
+            st.markdown(f"**You:** {item.get('answer', '')}")
             st.markdown("")
 
-        st.markdown(f"**Mentor**  \\n+{question.get('prompt', '')}")
+        st.markdown(f"**Mentor:** {question.get('prompt', '')}")
         options = question.get("options", [])
         labels = [str(opt.get("label", "")) for opt in options]
         values = [str(opt.get("value", "")) for opt in options]
@@ -626,75 +655,97 @@ def render_hybrid_blueprint(report: Dict[str, object]) -> None:
     strategic_snapshot = report.get("strategic_snapshot", {})
     careers = report.get("careers", [])
 
-    with st.container(border=True):
-        st.markdown("### User Persona Summary")
-        st.write(persona.get("summary", ""))
-        st.markdown("**Strengths**")
-        for strength in persona.get("strengths", []):
-            st.write(f"- {strength}")
+    mode = str(profile_snapshot.get("mentor_mode", "Corporate Strategist"))
+    mode_voice = {
+        "Friendly Coach": "Mentor tone: practical, encouraging, and action-focused.",
+        "Corporate Strategist": "Mentor tone: structured, steady, and long-term strategic.",
+        "Creative Career Architect": "Mentor tone: imaginative, differentiated, and portfolio-first.",
+    }.get(mode, "Mentor tone: focused and strategic.")
 
+    selectable_careers = [c for c in careers if c]
+    if not selectable_careers:
+        st.warning("No career recommendations available.")
+        return
+
+    options = [f"{c.get('label')}: {c.get('title')} ({c.get('match_score', 0)}%)" for c in selectable_careers]
+    option_to_title = {opt: str(c.get("title", "")) for opt, c in zip(options, selectable_careers)}
+
+    if "selected_deep_dive_career" not in st.session_state:
+        st.session_state.selected_deep_dive_career = str(selectable_careers[0].get("title", ""))
+
+    selected_option = st.radio("Career Selection", options=options, horizontal=True)
+    st.session_state.selected_deep_dive_career = option_to_title.get(selected_option, st.session_state.selected_deep_dive_career)
+
+    selected = next(
+        (c for c in selectable_careers if str(c.get("title", "")) == st.session_state.selected_deep_dive_career),
+        selectable_careers[0],
+    )
+
+    with st.expander("🧠 User Persona", expanded=False):
+        st.write(persona.get("summary", ""))
+        st.markdown(f"<p class='pp-mini-note'>{mode_voice}</p>", unsafe_allow_html=True)
+        st.metric("Career Confidence Score", f"{strategic_snapshot.get('career_confidence_score', 0)}%")
         st.markdown(
-            f"**Profile context:** {profile_snapshot.get('education', '')} • {profile_snapshot.get('domain_interest', '')} • Priority: {profile_snapshot.get('career_priority', '')} • Mode: {profile_snapshot.get('mentor_mode', '')}"
+            f"**Profile context:** {profile_snapshot.get('education', '')} • {profile_snapshot.get('domain_interest', '')} • Priority: {profile_snapshot.get('career_priority', '')}"
         )
 
-    with st.container(border=True):
-        st.markdown("### Strategic Snapshot")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.metric("Career Confidence Score", f"{strategic_snapshot.get('career_confidence_score', 0)}%")
-            st.metric(
-                "User vs Market",
-                f"{strategic_snapshot.get('user_readiness_score', 0)} / {strategic_snapshot.get('market_benchmark_score', 0)}",
-            )
-        with c2:
-            st.markdown(f"**Fast Path:** {strategic_snapshot.get('fast_path', '')}")
-            st.markdown(f"**Safe Path:** {strategic_snapshot.get('safe_path', '')}")
-
-        st.markdown(f"**Risk of Inaction:** {strategic_snapshot.get('risk_of_inaction', '')}")
+    with st.expander(
+        f"🔎 Deep Dive: {selected.get('label', 'Career')} • {selected.get('title', '')} ({selected.get('match_score', 0)}%)",
+        expanded=True,
+    ):
         st.markdown(
-            f"<p class='pp-mini-note'>{strategic_snapshot.get('comparison_summary', '')}</p>",
+            f"<span class='pp-badge'>Confidence {selected.get('match_score', 0)}%</span><span class='pp-badge'>Mode: {mode}</span>",
             unsafe_allow_html=True,
         )
-        st.markdown(f"**Motivational Insight:** {strategic_snapshot.get('motivational_insight', '')}")
+        st.progress(int(selected.get("match_score", 0)))
+        st.markdown(f"**Why this fits:** {selected.get('personalized_explanation', '')}")
 
-    for index, career in enumerate(careers):
-        with st.container(border=True):
-            st.markdown(
-                f"<div class='pp-result-card pp-result-animated' style='animation-delay:{index * 70}ms;'>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(f"### {career.get('label', '')}: {career.get('title', '')}")
-            st.markdown(f"**Match Score:** {career.get('match_score', 80)}%")
-            st.progress(int(career.get("match_score", 80)))
-            st.markdown(f"**Why this fits:** {career.get('personalized_explanation', '')}")
-            st.markdown(f"**Salary Range:** {career.get('salary_range', '')}")
+        with st.expander("🛠️ Skills", expanded=False):
+            focus_skills = list(selected.get("skills_to_focus", []))[:6]
+            max_count = max(1, len(focus_skills))
+            for index, skill in enumerate(focus_skills, start=1):
+                st.write(f"{index}. {skill}")
+                skill_score = int(60 + ((max_count - index) * (35 / max_count)))
+                st.progress(skill_score)
 
-            st.markdown("**Salary Trajectory**")
-            trajectory = career.get("salary_trajectory", {})
-            st.write(f"0-3 months: {trajectory.get('0-3', '')}")
-            st.write(f"3-6 months: {trajectory.get('3-6', '')}")
-            st.write(f"6-12 months: {trajectory.get('6-12', '')}")
-
-            st.markdown("**Skills to Focus**")
-            focus_skills = list(career.get("skills_to_focus", career.get("skills_required", [])))[:6]
-            for idx, skill in enumerate(focus_skills, start=1):
-                st.write(f"{idx}. {skill}")
-
-            st.markdown("**Development Plan**")
-            for step in career.get("development_plan", []):
-                st.write(f"- {step}")
-
-            st.markdown("**12-Month Roadmap**")
-            roadmap = career.get("roadmap", {})
+        with st.expander("🗺️ 12-Month Roadmap", expanded=False):
+            roadmap = selected.get("roadmap", {})
             for phase in ["0-3", "3-6", "6-12"]:
                 st.markdown(f"**{phase} months**")
                 for step in roadmap.get(phase, []):
                     st.write(f"- {step}")
+            st.markdown("**Development Plan**")
+            for step in selected.get("development_plan", []):
+                st.write(f"- {step}")
 
-            st.markdown(f"**Industry Insight:** {career.get('industry_insights', '')}")
-            st.markdown(f"**Risk / Warning:** {career.get('risks', '')}")
-            st.markdown("</div>", unsafe_allow_html=True)
+        with st.expander("💰 Salary", expanded=False):
+            st.write(f"Range: {selected.get('salary_range', '')}")
+            trajectory = selected.get("salary_trajectory", {})
+            st.write(f"0-3 months: {trajectory.get('0-3', '')}")
+            st.write(f"3-6 months: {trajectory.get('3-6', '')}")
+            st.write(f"6-12 months: {trajectory.get('6-12', '')}")
 
-    with st.container(border=True):
-        st.markdown("### Final Mentor Advice")
-        st.write(report.get("final_advice", ""))
+        with st.expander("📈 Industry Insights", expanded=False):
+            st.metric(
+                "User vs Market",
+                f"{strategic_snapshot.get('user_readiness_score', 0)} / {strategic_snapshot.get('market_benchmark_score', 0)}",
+            )
+            st.markdown(f"<p class='pp-mini-note'>{strategic_snapshot.get('comparison_summary', '')}</p>", unsafe_allow_html=True)
+            st.write(selected.get("industry_insights", ""))
+
+        with st.expander("⚠️ Warnings", expanded=False):
+            st.markdown(
+                f"<div class='pp-warning'><b>Risk of Inaction:</b> {strategic_snapshot.get('risk_of_inaction', '')}</div>",
+                unsafe_allow_html=True,
+            )
+            st.write(selected.get("risks", ""))
+            st.write(f"Fast Path: {strategic_snapshot.get('fast_path', '')}")
+            st.write(f"Safe Path: {strategic_snapshot.get('safe_path', '')}")
+
+        with st.expander("✨ Final Advice", expanded=False):
+            st.markdown(
+                f"<div class='pp-advice'>{strategic_snapshot.get('motivational_insight', '')}</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(f"<p class='pp-mini-note'>{mode_voice}</p>", unsafe_allow_html=True)
+            st.write(report.get("final_advice", ""))
