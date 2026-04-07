@@ -935,6 +935,19 @@ def build_hybrid_coach_report(profile: Dict[str, str], answers: Dict[str, str]) 
     mode = profile.get("mentor_mode", "Corporate Strategist")
     mode_style = MENTOR_MODES.get(mode, MENTOR_MODES["Corporate Strategist"])
 
+    domain_interest = str(profile.get("domain_interest", "Technology"))
+    experience_level = str(profile.get("experience_level", "Beginner"))
+    profile_skills = [part.strip().lower() for part in str(profile.get("skills_text", "")).split(",") if part.strip()]
+
+    domain_boost_map: Dict[str, List[str]] = {
+        "Technology": ["Software Engineer", "AI Product Manager", "Data Analyst"],
+        "Design": ["UX Designer", "AI Product Manager"],
+        "Business": ["Management Consultant", "Growth Strategist", "AI Product Manager"],
+        "Finance": ["Data Analyst", "Management Consultant"],
+        "Healthcare": ["Data Analyst", "Management Consultant"],
+        "Marketing": ["Growth Strategist", "AI Product Manager"],
+    }
+
     mode_roadmap_step: Dict[str, str] = {
         "Friendly Coach": "Complete one practical outcome each week and review what improved.",
         "Corporate Strategist": "Document monthly capability milestones and mentor feedback loops.",
@@ -945,6 +958,20 @@ def build_hybrid_coach_report(profile: Dict[str, str], answers: Dict[str, str]) 
     for career in MENTOR_CAREERS:
         score = _score_career(answers, career)
         explanation = _fit_explanation(answers, career["title"])
+
+        # Stage-1-aware ranking: align results with user's declared domain and skill signals.
+        if career["title"] in domain_boost_map.get(domain_interest, []):
+            score += 7
+
+        career_skills_lower = [s.lower() for s in career.get("skills_required", [])]
+        skill_overlap = len([s for s in profile_skills if any(s in cs or cs in s for cs in career_skills_lower)])
+        score += min(8, skill_overlap * 2)
+
+        if experience_level == "Beginner" and career["title"] in {"Data Analyst", "UX Designer", "Growth Strategist"}:
+            score += 2
+        if experience_level == "Advanced" and career["title"] in {"AI Product Manager", "Management Consultant", "Software Engineer"}:
+            score += 2
+
         if profile.get("career_priority", "") == "income":
             score = min(98, score + 2)
         if profile.get("career_priority", "") == "stability" and "consultant" in career["title"].lower():
